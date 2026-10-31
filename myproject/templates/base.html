@@ -2,15 +2,34 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>
         {% block title %}
-        تعمیرگاه تخصصی کیشانی
+        تعمیرگاه تخصصی کیشانی | تعمیر خودرو در تهران
         {% endblock %}
     </title>
+
+    <!-- SEO -->
+    <meta name="description" content="{% block meta_description %}تعمیرگاه تخصصی کیشانی در تهران؛ ارائه خدمات عیب‌یابی خودرو، سرویس دوره‌ای، تنظیم موتور، تعمیر اساسی موتور و گیربکس با رعایت اصول فنی.{% endblock %}">
+
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:site_name" content="تعمیرگاه تخصصی کیشانی">
+    <meta property="og:title" content="{% block og_title %}تعمیرگاه تخصصی کیشانی{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}تعمیرگاه تخصصی کیشانی در تهران؛ خدمات تخصصی تعمیر و نگهداری خودرو.{% endblock %}">
+    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 
     <base href="{% static '' %}">
 
@@ -35,6 +54,7 @@
     {% block extra_css %}
     {% endblock %}
 </head>
+
 
 <body>
 

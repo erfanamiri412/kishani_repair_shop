@@ -7589,3 +7589,49 @@ body {
         font-size: 10px;
     }
 }
+
+@media (max-width: 767.98px) {
+    .main p,
+    .main .description {
+        font-size: 16px;
+        line-height: 1.9;
+    }
+}
+
+/* =========================================================
+   MOBILE PARAGRAPH READABILITY + FIXED IMAGE HOVER SIZE
+   اعمال فقط روی متن‌های پاراگراف و تصاویر کارت‌ها
+========================================================= */
+
+@media (max-width: 767.98px) {
+
+    body main p,
+    body main p.description,
+    body main p.about-description,
+    body main .hero p,
+    body main .section-title p,
+    body main .featured-services .service-item p.description,
+    body main .about .content ul p,
+    body main .service-feature-text p,
+    body main .faq .faq-container .faq-active .faq-content p {
+        font-size: clamp(14px, 3.8vw, 16px) !important;
+        line-height: 1.9 !important;
+    }
+
+}
+
+/* تصاویر کارت‌ها و بخش خدمات در هاور بزرگ نشوند. */
+.services .card:hover .card-img img,
+.service-feature-card:hover .service-feature-image {
+    transform: none !important;
+}
+
+/* مقیاس اولیه 1.01 تصویر خدمات نیز حذف شود. */
+.service-feature-image {
+    transform: none !important;
+}
+
+/* لوگوهای برند هنگام هاور بزرگ نشوند؛ سایه و سایر افکت‌ها باقی بمانند. */
+.brand-box:hover {
+    transform: none !important;
+}
