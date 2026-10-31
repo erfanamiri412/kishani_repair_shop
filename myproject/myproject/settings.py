@@ -13,11 +13,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # =========================================================
 # ENVIRONMENT VARIABLES
-# Loads .env from the directory containing manage.py.
-# Existing operating-system environment variables take priority.
 # =========================================================
 
 def load_env_file(env_path):
+    """
+    Load simple KEY=VALUE entries from .env.
+    Existing system environment variables always take priority.
+    """
     if not env_path.is_file():
         return
 
@@ -76,6 +78,15 @@ def env_list(name, default=""):
     ]
 
 
+def env_int(name, default):
+    try:
+        return int(os.getenv(name, str(default)))
+    except (TypeError, ValueError) as exc:
+        raise ImproperlyConfigured(
+            f"{name} must be an integer."
+        ) from exc
+
+
 # =========================================================
 # SECURITY
 # =========================================================
@@ -85,28 +96,37 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
 if not SECRET_KEY:
     raise ImproperlyConfigured(
         "DJANGO_SECRET_KEY is missing. "
-        "Set it in the .env file or server environment."
+        "Set it in the environment or .env file."
     )
 
-# False by default: detailed Django error pages stay disabled.
 DEBUG = env_bool("DJANGO_DEBUG", False)
 
 ALLOWED_HOSTS = env_list(
     "DJANGO_ALLOWED_HOSTS",
-    "localhost,127.0.0.1",
+    "localhost,127.0.0.1,kishani-repair-shop.com,www.kishani-repair-shop.com",
 )
 
 CSRF_TRUSTED_ORIGINS = env_list(
     "DJANGO_CSRF_TRUSTED_ORIGINS",
-    "http://localhost:8000,http://127.0.0.1:8000",
+    (
+        "http://localhost:8000,"
+        "http://127.0.0.1:8000,"
+        "https://kishani-repair-shop.com,"
+        "https://www.kishani-repair-shop.com"
+    ),
 )
 
+# Enable only after SSL and hosting proxy behavior are verified.
 SECURE_SSL_REDIRECT = env_bool(
     "DJANGO_SECURE_SSL_REDIRECT",
-    not DEBUG,
+    False,
 )
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if env_bool("DJANGO_TRUST_X_FORWARDED_PROTO", False):
+    SECURE_PROXY_SSL_HEADER = (
+        "HTTP_X_FORWARDED_PROTO",
+        "https",
+    )
 
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
@@ -114,7 +134,7 @@ X_FRAME_OPTIONS = "DENY"
 
 SECURE_COOKIES = env_bool(
     "DJANGO_SECURE_COOKIES",
-    not DEBUG,
+    False,
 )
 
 SESSION_COOKIE_SECURE = SECURE_COOKIES
@@ -124,14 +144,10 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-try:
-    SECURE_HSTS_SECONDS = int(
-        os.getenv("DJANGO_SECURE_HSTS_SECONDS", "0")
-    )
-except ValueError as exc:
-    raise ImproperlyConfigured(
-        "DJANGO_SECURE_HSTS_SECONDS must be an integer."
-    ) from exc
+SECURE_HSTS_SECONDS = env_int(
+    "DJANGO_SECURE_HSTS_SECONDS",
+    0,
+)
 
 if SECURE_HSTS_SECONDS < 0:
     raise ImproperlyConfigured(
@@ -181,7 +197,7 @@ INSTALLED_APPS = [
     # Requests
     "requests.apps.RequestsConfig",
 
-    # Audit & Reports
+    # Audit and Reports
     "audit.apps.AuditConfig",
     "reports.apps.ReportsConfig",
 ]
@@ -219,9 +235,7 @@ WSGI_APPLICATION = "myproject.wsgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            BASE_DIR / "templates",
-        ],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -237,13 +251,17 @@ TEMPLATES = [
 
 # =========================================================
 # DATABASE
-# Preserve the existing SQLite database.
+# Keep SQLite for the initial deployment.
+# Database must be stored in persistent hosting storage.
 # =========================================================
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        "OPTIONS": {
+            "timeout": 20,
+        },
     }
 }
 
@@ -298,13 +316,20 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-STATICFILES_DIRS = (
-    [BASE_DIR / "static"]
-    if (BASE_DIR / "static").is_dir()
-    else []
-)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 
 # =========================================================
@@ -346,14 +371,10 @@ KAVENEGAR_API_KEY = os.getenv("KAVENEGAR_API_KEY", "")
 
 KAVENEGAR_SENDER = os.getenv("KAVENEGAR_SENDER", "")
 
-try:
-    MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY = int(
-        os.getenv("MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY", "1")
-    )
-except ValueError as exc:
-    raise ImproperlyConfigured(
-        "MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY must be an integer."
-    ) from exc
+MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY = env_int(
+    "MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY",
+    1,
+)
 
 if MAINTENANCE_MAX_AUTOMATIC_SMS_PER_DAY < 0:
     raise ImproperlyConfigured(
